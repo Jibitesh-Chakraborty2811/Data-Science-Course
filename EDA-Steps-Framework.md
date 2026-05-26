@@ -17,6 +17,7 @@ This is a reusable framework you can apply to almost any dataset.
 8. Handle correlations/redundancy
 9. Feature engineering
 10. Final preprocessing decisions
+
 ```
 
 ---
@@ -28,6 +29,7 @@ Before ANYTHING:
 ```python
 df.info()
 df.describe()
+
 ```
 
 Split columns:
@@ -36,6 +38,7 @@ Split columns:
 numerical_cols = [...]
 categorical_cols = [...]
 target_col = "target"
+
 ```
 
 ---
@@ -54,6 +57,7 @@ This is ALWAYS one of the first steps.
 
 ```python
 missing_percent = df[col].isnull().mean() * 100
+
 ```
 
 ---
@@ -71,6 +75,7 @@ sns.histplot(df[col])
 sns.boxplot(x=df[col])
 
 df[col].skew()
+
 ```
 
 ---
@@ -91,6 +96,7 @@ Conditions:
 
 ```python
 abs(skewness) < 0.5
+
 ```
 
 Use:
@@ -99,6 +105,7 @@ Use:
 
 ```python
 df[col].fillna(df[col].mean())
+
 ```
 
 Why?
@@ -113,6 +120,7 @@ Conditions:
 
 ```python
 abs(skewness) > 0.5
+
 ```
 
 Use:
@@ -121,6 +129,7 @@ Use:
 
 ```python
 df[col].fillna(df[col].median())
+
 ```
 
 Why?
@@ -162,6 +171,7 @@ Used when:
 
 ```python
 df[col+"_missing"] = df[col].isnull().astype(int)
+
 ```
 
 Sometimes missing itself carries information.
@@ -208,6 +218,7 @@ Missing values?
            |
            ├── Critical feature → Domain/ML imputation
            └── Otherwise → Drop
+
 ```
 
 ---
@@ -220,6 +231,7 @@ Missing values?
 
 ```python
 df[col].isnull().mean()
+
 ```
 
 ---
@@ -230,6 +242,7 @@ Check:
 
 ```python
 df[col].nunique()
+
 ```
 
 ---
@@ -246,6 +259,7 @@ Use:
 
 ```python
 df[col].fillna(df[col].mode()[0])
+
 ```
 
 Best for:
@@ -261,6 +275,7 @@ Create separate category:
 
 ```python
 df[col].fillna("Unknown")
+
 ```
 
 Example:
@@ -297,6 +312,7 @@ Missing values?
     |
     └── Very high missing
            └── Drop feature
+
 ```
 
 ---
@@ -322,6 +338,7 @@ This is CRITICAL.
 ```python
 sns.histplot(df[col], kde=True)
 sns.boxplot(x=df[col])
+
 ```
 
 ---
@@ -330,23 +347,24 @@ sns.boxplot(x=df[col])
 
 ```python
 df[col].skew()
+
 ```
 
 Interpretation:
 
-| Skewness | Meaning    |
-| -------- | ---------- |
-| 0        | Symmetric  |
-| > 0      | Right skew |
-| < 0      | Left skew  |
+| Skewness | Meaning |
+| --- | --- |
+| 0 | Symmetric |
+| > 0 | Right skew |
+| < 0 | Left skew |
 
 Rules:
 
-| Value       | Interpretation       |
-| ----------- | -------------------- |
+| Value | Interpretation |
+| --- | --- |
 | -0.5 to 0.5 | Approximately normal |
-| 0.5 to 1    | Moderately skewed    |
-| >1          | Highly skewed        |
+| 0.5 to 1 | Moderately skewed |
+| >1 | Highly skewed |
 
 ---
 
@@ -354,6 +372,7 @@ Rules:
 
 ```python
 df[col].kurtosis()
+
 ```
 
 Measures:
@@ -362,11 +381,11 @@ Measures:
 
 Interpretation:
 
-| Kurtosis | Meaning              |
-| -------- | -------------------- |
-| ~0       | Normal               |
-| High     | Heavy tails/outliers |
-| Low      | Flat distribution    |
+| Kurtosis | Meaning |
+| --- | --- |
+| ~0 | Normal |
+| High | Heavy tails/outliers |
+| Low | Flat distribution |
 
 ---
 
@@ -380,6 +399,7 @@ Conditions:
 
 ```python
 abs(skewness) < 0.5
+
 ```
 
 Use:
@@ -390,7 +410,7 @@ Use:
 
 # Z-Score Method
 
-genui{"math_block_widget_always_prefetch_v2":{"content":"z = \frac{x-\mu}{\sigma}"}}
+$$z = \frac{x-\mu}{\sigma}$$
 
 ```python
 from scipy.stats import zscore
@@ -398,6 +418,7 @@ from scipy.stats import zscore
 z = np.abs(zscore(df[col]))
 
 outliers = df[z > 3]
+
 ```
 
 Use when:
@@ -413,6 +434,7 @@ Conditions:
 
 ```python
 abs(skewness) > 0.5
+
 ```
 
 Use:
@@ -423,7 +445,7 @@ Use:
 
 # IQR Method
 
-IQR = Q_3 - Q_1
+$$IQR = Q_3 - Q_1$$
 
 ```python
 Q1 = df[col].quantile(0.25)
@@ -433,12 +455,14 @@ IQR = Q3 - Q1
 
 lower = Q1 - 1.5 * IQR
 upper = Q3 + 1.5 * IQR
+
 ```
 
 Outliers:
 
 ```python
 df[(df[col] < lower) | (df[col] > upper)]
+
 ```
 
 ---
@@ -453,6 +477,7 @@ Check distribution
     |
     └── Skewed / non-normal
            └── IQR
+
 ```
 
 ---
@@ -479,6 +504,7 @@ Replace extremes.
 
 ```python
 df[col] = np.clip(df[col], lower, upper)
+
 ```
 
 Most common industry solution.
@@ -491,6 +517,7 @@ For right-skewed data.
 
 ```python
 df[col] = np.log1p(df[col])
+
 ```
 
 Reduces skewness.
@@ -523,34 +550,81 @@ Not true outliers, but:
 
 ```python
 df[col].value_counts(normalize=True)
+
 ```
 
 Example:
 
-| Category | %    |
-| -------- | ---- |
-| A        | 80%  |
-| B        | 18%  |
-| C        | 0.2% |
+| Category | % |
+| --- | --- |
+| A | 80% |
+| B | 18% |
+| C | 0.2% |
 
 Rare categories may be grouped:
 
 ```python
 Other
+
 ```
 
 ---
 
-# STEP 3 — FEATURE IMPORTANCE FRAMEWORK
+# STEP 3 — FEATURE IMPORTANCE FRAMEWORK (NUMERIC + RELIABLE)
 
-Now:
+Visualizations help humans understand patterns, but **feature importance should ultimately be validated numerically/statistically**.
 
-> Which features affect target?
+A strong data scientist does BOTH:
 
-This depends on:
+```text
+1. Visual validation
+2. Statistical validation
+3. ML-based validation
 
-* Feature type
-* Target type
+```
+
+This is the proper **mathematical/statistical feature importance framework**.
+
+The correct method depends on:
+
+| Feature Type | Target Type |
+| --- | --- |
+| Numeric | Numeric |
+| Numeric | Categorical |
+| Categorical | Categorical |
+| Categorical | Numeric |
+
+---
+
+# STEP 1 — IDENTIFY TARGET TYPE
+
+---
+
+# Regression Problem
+
+Target:
+
+* Continuous numeric
+
+Examples:
+
+* Salary
+* House price
+* Revenue
+
+---
+
+# Classification Problem
+
+Target:
+
+* Categories/classes
+
+Examples:
+
+* Churn Yes/No
+* Fraud/Not Fraud
+* Disease category
 
 ---
 
@@ -558,89 +632,224 @@ This depends on:
 
 Example:
 
-* Income vs Sales
+* Income vs House Price
+
+Goal:
+
+> Does this feature affect the target?
 
 ---
 
-# Methods
+# METHOD 1 — PEARSON CORRELATION
 
-## Correlation
+Measures:
 
-```python
-df.corr()
-```
+* Linear relationship strength
 
-Visualization:
+Formula:
 
-```python
-sns.heatmap(df.corr(), annot=True)
-```
-
-Use:
-
-* Linear relationships
+$$r = \frac{\sum (x_i-\bar{x})(y_i-\bar{y})}{\sqrt{\sum (x_i-\bar{x})^2 \sum (y_i-\bar{y})^2}}$$
 
 ---
 
-## Scatterplot
+# Interpretation
+
+| Correlation | Meaning |
+| --- | --- |
+| 0 | No linear relation |
+| 0.2 | Weak |
+| 0.5 | Moderate |
+| 0.7+ | Strong |
+| 1 | Perfect |
+
+---
+
+# Steps
 
 ```python
-sns.scatterplot(x=feature, y=target)
+corr = df["Income"].corr(df["HousePrice"])
+
 ```
+
+---
+
+# Statistical Significance
+
+Correlation alone is not enough.
+
+Need:
+
+* P-value
+
+```python
+from scipy.stats import pearsonr
+
+corr, p = pearsonr(df["Income"], df["HousePrice"])
+
+```
+
+---
+
+# Decision
+
+```text
+High |corr| + low p-value
+= important feature
+
+```
+
+Usually:
+
+```python
+p < 0.05
+
+```
+
+means statistically significant.
+
+---
+
+# METHOD 2 — SPEARMAN CORRELATION
+
+Use when:
+
+* Nonlinear monotonic relationships
+* Skewed data
+* Outliers present
+
+Instead of actual values:
+
+* Uses ranks
+
+```python
+from scipy.stats import spearmanr
+
+corr, p = spearmanr(x, y)
+
+```
+
+---
+
+# WHEN TO USE PEARSON vs SPEARMAN
+
+| Method | Use Case |
+| --- | --- |
+| Pearson | Linear + normal-ish |
+| Spearman | Nonlinear/monotonic/skewed |
 
 ---
 
 # CASE B — NUMERICAL FEATURE vs CATEGORICAL TARGET
 
-VERY common classification scenario.
+VERY IMPORTANT.
 
 Example:
 
 * Salary vs Churn
+* Age vs Disease
+
+Goal:
+
+> Are feature values different across classes?
 
 ---
 
-# Visualizations
+# BINARY TARGET → T-TEST
 
-## Boxplot
+Example:
+
+* Churn = Yes/No
+
+---
+
+# Hypotheses
+
+$H_0:$ Means are equal.
+
+$H_1:$ Means differ.
+
+---
+
+# Formula
+
+$$t = \frac{\bar{x}_1 - \bar{x}_2}{\sqrt{\frac{s_1^2}{n_1} + \frac{s_2^2}{n_2}}}$$
+
+---
+
+# Steps
 
 ```python
-sns.boxplot(x=target, y=feature)
+from scipy.stats import ttest_ind
+
+group1 = df[df["Churn"] == 0]["Salary"]
+group2 = df[df["Churn"] == 1]["Salary"]
+
+t_stat, p = ttest_ind(group1, group2)
+
 ```
 
 ---
 
-# Statistical Test
-
-## T-test (binary target)
+# Decision
 
 ```python
-ttest_ind()
+if p < 0.05:
+    important feature
+
 ```
 
-## ANOVA (multiple classes)
+Because:
+
+* Means differ significantly across classes.
+
+---
+
+# MULTI-CLASS TARGET → ANOVA
+
+Example:
+
+* Salary vs EducationLevel
+
+Education:
+
+* School
+* College
+* Masters
+* PhD
+
+---
+
+# ANOVA Goal
+
+Checks whether:
+
+* At least one group mean differs
+
+---
+
+# Formula
+
+$$F = \frac{\text{Between-group variance}}{\text{Within-group variance}}$$
+
+---
+
+# Steps
 
 ```python
-f_oneway()
+from scipy.stats import f_oneway
+
+f_stat, p = f_oneway(group1, group2, group3)
+
 ```
 
 ---
 
-# ML-Based Importance
+# Interpretation
 
-## Mutual Information
-
-```python
-mutual_info_classif()
-```
-
-## Random Forest Importance
-
-```python
-model.feature_importances_
-```
-
-Very common in industry.
+| Result | Meaning |
+| --- | --- |
+| High F | Strong separation |
+| Low p-value | Significant |
 
 ---
 
@@ -650,27 +859,98 @@ Example:
 
 * Gender vs Churn
 
+Goal:
+
+> Are categories associated?
+
 ---
 
-# Visualization
+# METHOD — CHI-SQUARE TEST
+
+Most important categorical test.
+
+---
+
+# Hypotheses
+
+$H_0:$ No association.
+
+$H_1:$ Association exists.
+
+---
+
+# Formula
+
+$$\chi^2 = \sum \frac{(O - E)^2}{E}$$
+
+---
+
+# Steps
 
 ```python
-sns.countplot(x=feature, hue=target)
+from scipy.stats import chi2_contingency
+
+table = pd.crosstab(df["Gender"], df["Churn"])
+
+chi2, p, dof, expected = chi2_contingency(table)
+
 ```
 
 ---
 
-# Statistical Test
-
-## Chi-Square Test
-
-Used for:
-
-* Association between categories
+# Interpretation
 
 ```python
-chi2_contingency()
+p < 0.05
+
 ```
+
+means:
+
+* Significant association exists.
+
+Feature matters.
+
+---
+
+# IMPORTANT PROBLEM WITH CHI-SQUARE
+
+Chi-square significance depends on dataset size.
+
+Huge datasets may make weak relationships appear significant.
+
+So also calculate:
+
+* Cramér’s V
+
+---
+
+# CRAMÉR’S V
+
+Measures:
+
+* Strength of categorical association
+
+Range:
+
+* 0 → no relation
+* 1 → perfect relation
+
+---
+
+# Formula
+
+$$V = \sqrt{\frac{\chi^2}{n(k-1)}}$$
+
+---
+
+# Interpretation
+
+| Value | Meaning |
+| --- | --- |
+| <0.1 | Weak |
+| 0.1–0.3 | Moderate |
+| >0.5 | Strong |
 
 ---
 
@@ -682,45 +962,251 @@ Example:
 
 ---
 
-# Visualization
+# METHOD — ANOVA
+
+Same idea:
+
+* Compare target means across categories.
 
 ```python
-sns.boxplot(x=feature, y=target)
+f_oneway()
+
 ```
 
 ---
 
-# Statistical Test
+# CASE E — NONLINEAR RELATIONSHIPS
 
-## ANOVA
+Correlation fails sometimes.
 
-Checks:
-
-* Do category groups differ significantly?
-
----
-
-# FEATURE IMPORTANCE MASTER TABLE
-
-| Feature Type | Target Type | Visualization | Statistical Method |
-| ------------ | ----------- | ------------- | ------------------ |
-| Numeric      | Numeric     | Scatterplot   | Correlation        |
-| Numeric      | Categorical | Boxplot       | T-test / ANOVA     |
-| Categorical  | Categorical | Countplot     | Chi-square         |
-| Categorical  | Numeric     | Boxplot       | ANOVA              |
-
----
-
-# REAL INDUSTRY FEATURE IMPORTANCE FLOW
+Example:
 
 ```text
-1. Understand target type
-2. Analyze feature-target relationship visually
-3. Apply statistical significance test
-4. Apply ML-based feature importance
-5. Check business meaning
-6. Remove redundant/useless features
+y = x²
+
 ```
+
+Pearson may show weak correlation.
+
+But feature is clearly important.
+
+---
+
+# METHOD — MUTUAL INFORMATION
+
+One of the BEST methods.
+
+Measures:
+
+* Information gain
+* Nonlinear relationships
+
+Works for:
+
+* Numeric
+* Categorical
+* Mixed data
+
+---
+
+# Formula Concept
+
+$MI(X,Y)$ Measures how much knowing X reduces uncertainty about Y.
+
+---
+
+# Steps
+
+Classification:
+
+```python
+from sklearn.feature_selection import mutual_info_classif
+
+mi = mutual_info_classif(X, y)
+
+```
+
+Regression:
+
+```python
+from sklearn.feature_selection import mutual_info_regression
+
+```
+
+---
+
+# Interpretation
+
+| MI | Meaning |
+| --- | --- |
+| 0 | Independent |
+| High | Important |
+
+No upper limit.
+
+Relative comparison matters.
+
+---
+
+# CASE F — TREE-BASED FEATURE IMPORTANCE
+
+MOST PRACTICAL INDUSTRY METHOD.
+
+---
+
+# Random Forest Importance
+
+Measures:
+
+* Reduction in impurity
+
+Features that split data well:
+
+* Get higher importance.
+
+---
+
+# Steps
+
+```python
+from sklearn.ensemble import RandomForestClassifier
+
+model = RandomForestClassifier()
+
+model.fit(X, y)
+
+importance = model.feature_importances_
+
+```
+
+---
+
+# Why Tree Importance is Powerful
+
+Captures:
+
+* Nonlinear relations
+* Feature interactions
+* Mixed data types
+
+Very commonly used.
+
+---
+
+# PROBLEM WITH TREE IMPORTANCE
+
+Bias toward:
+
+* High-cardinality features
+* Continuous variables
+
+---
+
+# BETTER VERSION → PERMUTATION IMPORTANCE
+
+VERY reliable.
+
+---
+
+# IDEA
+
+Shuffle one feature randomly.
+
+If model performance drops heavily:
+
+* Feature important.
+
+If performance unchanged:
+
+* Feature useless.
+
+---
+
+# Steps
+
+```python
+from sklearn.inspection import permutation_importance
+
+result = permutation_importance(model, X, y)
+
+```
+
+---
+
+# Why Permutation Importance is Excellent
+
+It measures:
+
+> Actual predictive contribution
+
+Not statistical assumptions.
+
+Very strong method.
+
+---
+
+# FEATURE IMPORTANCE MASTER FRAMEWORK
+
+| Scenario | Statistical Method | Strength Measure |
+| --- | --- | --- |
+| Numeric vs Numeric | Pearson/Spearman | Correlation |
+| Numeric vs Binary Category | T-test | P-value + Effect size |
+| Numeric vs Multi-category | ANOVA | F-statistic |
+| Categorical vs Categorical | Chi-square | Cramér’s V |
+| Nonlinear relationships | Mutual Information | MI score |
+| General ML importance | Random Forest | Feature importance |
+| Best practical importance | Permutation Importance | Performance drop |
+
+---
+
+# INDUSTRY FEATURE IMPORTANCE FLOW
+
+This is VERY close to real DS workflows.
+
+```text
+1. Identify feature type
+2. Identify target type
+3. Apply statistical significance test
+4. Check strength metric
+5. Apply nonlinear methods
+6. Apply model-based importance
+7. Validate using permutation importance
+8. Remove weak/redundant features
+
+```
+
+---
+
+# IMPORTANT CONCEPT — SIGNIFICANCE vs IMPORTANCE
+
+A feature can be:
+
+| Situation | Meaning |
+| --- | --- |
+| Significant but weak | Real effect, tiny impact |
+| Important but nonlinear | Correlation misses it |
+| Correlated but redundant | Duplicated information |
+
+This is why:
+
+* Multiple methods are used together.
+
+---
+
+# BEST PRACTICAL STACK FOR REAL EDA
+
+Most strong data scientists use:
+
+```text
+1. Correlation/Spearman
+2. Statistical tests
+3. Mutual Information
+4. Random Forest importance
+5. Permutation Importance
+
+```
+
+Together.
 
 ---
 
@@ -789,4 +1275,5 @@ Missing data itself may contain information.
 14. Remove redundancy
 15. Feature engineering
 16. Prepare for ML
+
 ```
