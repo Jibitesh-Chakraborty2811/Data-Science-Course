@@ -1766,3 +1766,437 @@ plt.show()
 15. Feature engineering
 16. Prepare for ML
 ```
+
+# Best Visualization strategies 
+
+This is one of the most important things to learn in EDA.
+
+Think of it as:
+
+| Feature Type | Target Type | Goal                       |
+| ------------ | ----------- | -------------------------- |
+| Numerical    | Numerical   | Relationship / Correlation |
+| Numerical    | Categorical | Compare distributions      |
+| Categorical  | Numerical   | Compare group statistics   |
+| Categorical  | Categorical | Compare proportions        |
+
+---
+
+# 1. Numerical Feature vs Numerical Target
+
+Example:
+
+```python
+Age vs Salary
+Balance vs CreditScore
+```
+
+Goal:
+
+```text
+Is there a relationship?
+Linear?
+Non-linear?
+Positive?
+Negative?
+```
+
+## Best Visualization #1: Scatter Plot
+
+```python
+sns.scatterplot(
+    x='Age',
+    y='Balance',
+    data=df
+)
+```
+
+Shows:
+
+* Trend
+* Clusters
+* Outliers
+
+---
+
+## Best Visualization #2: Regression Plot
+
+```python
+sns.regplot(
+    x='Age',
+    y='Balance',
+    data=df
+)
+```
+
+Shows:
+
+* Scatter
+* Best fit line
+
+Very useful.
+
+---
+
+## Best Visualization #3: Correlation Heatmap
+
+For many numerical features.
+
+```python
+corr = df[numerical_cols].corr()
+
+sns.heatmap(
+    corr,
+    annot=True,
+    cmap='coolwarm'
+)
+```
+
+Shows:
+
+* Strong correlations
+* Multicollinearity
+
+---
+
+# 2. Numerical Feature vs Categorical Target
+
+Example:
+
+```python
+Age vs Exited
+Balance vs Exited
+Salary vs Purchased
+```
+
+Target:
+
+```python
+Exited = 0 / 1
+```
+
+Goal:
+
+```text
+Do the distributions differ?
+```
+
+---
+
+## Best Visualization #1: Boxplot ⭐
+
+Most important.
+
+```python
+sns.boxplot(
+    x='Exited',
+    y='Age',
+    data=df
+)
+```
+
+Shows:
+
+* Median
+* IQR
+* Outliers
+
+Exactly what you just used.
+
+---
+
+## Best Visualization #2: Violin Plot ⭐
+
+```python
+sns.violinplot(
+    x='Exited',
+    y='Age',
+    data=df
+)
+```
+
+Shows:
+
+* Density
+* Shape
+* Spread
+
+More informative than boxplots.
+
+---
+
+## Best Visualization #3: Overlapping Histograms
+
+```python
+sns.histplot(
+    data=df,
+    x='Age',
+    hue='Exited',
+    kde=True
+)
+```
+
+Shows:
+
+* Distribution shift
+
+Example:
+
+```text
+Exited=0 peak around 35
+Exited=1 peak around 45
+```
+
+Very powerful.
+
+---
+
+## Best Visualization #4: KDE Plot
+
+```python
+sns.kdeplot(
+    data=df,
+    x='Age',
+    hue='Exited',
+    fill=True
+)
+```
+
+Cleaner than histograms.
+
+---
+
+# 3. Categorical Feature vs Numerical Target
+
+Example:
+
+```python
+Gender vs Salary
+Geography vs Balance
+Department vs Revenue
+```
+
+Goal:
+
+```text
+Do different categories have different averages?
+```
+
+---
+
+## Best Visualization #1: Boxplot ⭐
+
+```python
+sns.boxplot(
+    x='Geography',
+    y='Balance',
+    data=df
+)
+```
+
+Shows:
+
+* Median
+* Spread
+* Outliers
+
+---
+
+## Best Visualization #2: Violin Plot
+
+```python
+sns.violinplot(
+    x='Geography',
+    y='Balance',
+    data=df
+)
+```
+
+Shows full distribution.
+
+---
+
+## Best Visualization #3: Barplot (Mean)
+
+```python
+sns.barplot(
+    x='Geography',
+    y='Balance',
+    data=df
+)
+```
+
+Shows:
+
+```text
+Average Balance per Geography
+```
+
+Good for presentations.
+
+---
+
+# 4. Categorical Feature vs Categorical Target
+
+Example:
+
+```python
+Gender vs Exited
+Geography vs Exited
+HasCrCard vs Exited
+```
+
+Goal:
+
+```text
+Do churn rates differ by category?
+```
+
+---
+
+## Best Visualization #1: Countplot ⭐
+
+```python
+sns.countplot(
+    x='Gender',
+    hue='Exited',
+    data=df
+)
+```
+
+Shows:
+
+```text
+Male churn
+Female churn
+```
+
+Most commonly used.
+
+---
+
+## Best Visualization #2: Stacked Bar Chart ⭐
+
+```python
+pd.crosstab(
+    df['Gender'],
+    df['Exited']
+).plot(
+    kind='bar',
+    stacked=True
+)
+```
+
+Shows proportions nicely.
+
+---
+
+## Best Visualization #3: Normalized Stacked Bar
+
+```python
+pd.crosstab(
+    df['Gender'],
+    df['Exited'],
+    normalize='index'
+).plot(
+    kind='bar',
+    stacked=True
+)
+```
+
+This is often the best choice.
+
+Example:
+
+```text
+Male:
+80% stayed
+20% churned
+
+Female:
+70% stayed
+30% churned
+```
+
+Immediately reveals differences.
+
+---
+
+## Best Visualization #4: Heatmap
+
+```python
+ct = pd.crosstab(
+    df['Geography'],
+    df['Exited']
+)
+
+sns.heatmap(
+    ct,
+    annot=True,
+    cmap='Blues'
+)
+```
+
+Good when categories are numerous.
+
+---
+
+# My Practical EDA Cheat Sheet
+
+For your churn dataset:
+
+### Numerical vs Numerical (Target)
+
+```python
+regplot
+scatterplot
+correlation heatmap
+```
+
+### Numerical vs Exited (Categorical Target)
+
+```python
+boxplot        ⭐
+violinplot     ⭐
+histplot+hue   ⭐
+kdeplot
+```
+
+### Categorical vs Numerical (Target)
+
+```python
+boxplot        ⭐
+violinplot
+barplot(mean)
+```
+
+### Categorical vs Exited (Categorical Target)
+
+```python
+countplot                  ⭐
+normalized stacked bar     ⭐⭐⭐
+heatmap
+```
+
+If I were analyzing your churn dataset, I would spend most of my time on:
+
+```python
+Age vs Exited
+Balance vs Exited
+Geography vs Exited
+Gender vs Exited
+IsActiveMember vs Exited
+NumOfProducts vs Exited
+```
+
+using:
+
+```python
+boxplot
+violinplot
+countplot
+normalized stacked bar chart
+```
+
+because those usually uncover the strongest churn drivers.
+
