@@ -409,4 +409,187 @@ df_encoded = pd.get_dummies(df[feature_cols], drop_first=True)
 
 ---
 
-That's it — plug in your columns, run the code, and the bar chart tells you what matters. Want me to save both guides together as a single file?
+
+
+---
+
+## Handling Imbalanced Data with SMOTE
+
+### How it works (intuition)
+
+1. Pick a minority class sample (Category B row)
+2. Find its nearest neighbors (other B rows that look similar)
+3. Draw a line between them, pick a random point on that line → that's your new synthetic row
+
+It's not copying — it's creating *plausible new data* that lives between existing points.
+
+---
+
+### Installation
+
+```python
+pip install imbalanced-learn
+```
+
+---
+
+### Basic SMOTE — Binary Classification
+
+```python
+from imblearn.over_sampling import SMOTE
+from collections import Counter
+
+feature_cols = ["age", "income", "score"]
+target = "loan_default"
+
+X = df[feature_cols].fillna(0)
+y = df[target]
+
+# Before
+print(f"Before: {Counter(y)}")
+# Output: Counter({'A': 800, 'B': 200})
+
+# Apply SMOTE
+smote = SMOTE(random_state=42)
+X_resampled, y_resampled = smote.fit_resample(X, y)
+
+# After
+print(f"After: {Counter(y_resampled)}")
+# Output: Counter({'A': 800, 'B': 800})  ← B now matches A
+```
+
+---
+
+### Multiclass — works the same way
+
+```python
+# If you have A=800, B=150, C=50
+# SMOTE will oversample B and C to match A
+
+smote = SMOTE(random_state=42)
+X_resampled, y_resampled = smote.fit_resample(X, y)
+print(Counter(y_resampled))
+# Counter({'A': 800, 'B': 800, 'C': 800})
+```
+
+---
+
+### Control how much to oversample
+
+```python
+# Don't want full 50:50? Use sampling_strategy
+
+# Bring minority to 50% of majority (800 * 0.5 = 400 B samples)
+smote = SMOTE(sampling_strategy=0.5, random_state=42)
+X_resampled, y_resampled = smote.fit_resample(X, y)
+print(Counter(y_resampled))
+# Counter({'A': 800, 'B': 400})
+```
+
+---
+
+### SMOTE + Undersampling (recommended combo)
+
+```python
+from imblearn.over_sampling import SMOTE
+from imblearn.under_sampling import RandomUnderSampler
+from imblearn.pipeline import Pipeline
+
+# Oversample minority to 50% of majority, then undersample majority to match
+pipeline = Pipeline([
+    ('smote', SMOTE(sampling_strategy=0.5, random_state=42)),
+    ('undersample', RandomUnderSampler(sampling_strategy=1.0, random_state=42))
+])
+
+X_resampled, y_resampled = pipeline.fit_resample(X, y)
+print(Counter(y_resampled))
+# Balanced without going overboard
+```
+
+---
+
+### Using it properly in a train/test workflow
+
+```python
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import classification_report
+
+# Split FIRST, then SMOTE only on training data
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+
+# SMOTE on train only (NEVER on test!)
+smote = SMOTE(random_state=42)
+X_train_res, y_train_res = smote.fit_resample(X_train, y_train)
+
+# Train
+model = RandomForestClassifier(random_state=42)
+model.fit(X_train_res, y_train_res)
+
+# Evaluate on original (untouched) test set
+y_pred = model.predict(X_test)
+print(classification_report(y_test, y_pred))
+```
+
+> **Critical rule:** SMOTE goes on training data ONLY. Never touch test data. Otherwise you're leaking synthetic info into evaluation.
+
+---
+
+### Variants (if basic SMOTE doesn't work well)
+
+| Variant | When to use | Code |
+|---------|-------------|------|
+| SMOTE (basic) | Default, works most of the time | `SMOTE()` |
+| BorderlineSMOTE | When classes overlap a lot | `from imblearn.over_sampling import BorderlineSMOTE` |
+| ADASYN | Focus on harder-to-learn samples | `from imblearn.over_sampling import ADASYN` |
+
+```python
+# BorderlineSMOTE — only generates near the decision boundary
+from imblearn.over_sampling import BorderlineSMOTE
+smote = BorderlineSMOTE(random_state=42)
+X_res, y_res = smote.fit_resample(X_train, y_train)
+```
+
+---
+
+### Quick visual check
+
+```python
+# See how SMOTE changed the feature space (pick 2 features)
+fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+
+axes[0].scatter(X_train.iloc[:, 0], X_train.iloc[:, 1], c=(y_train == 'B').astype(int), alpha=0.5, cmap='coolwarm')
+axes[0].set_title("Before SMOTE")
+
+axes[1].scatter(X_train_res.iloc[:, 0], X_train_res.iloc[:, 1], c=(y_train_res == 'B').astype(int), alpha=0.5, cmap='coolwarm')
+axes[1].set_title("After SMOTE")
+
+plt.show()
+```
+
+---
+
+### When NOT to use SMOTE
+
+- If you only have **categorical features** (SMOTE interpolates numbers — use `SMOTENC` for mixed data)
+- If your dataset is tiny (< 50 minority samples) — not enough neighbors to interpolate
+- If you haven't tried simpler fixes first: `class_weight='balanced'` in sklearn models
+
+```python
+# Simpler alternative: just tell the model classes are imbalanced
+model = RandomForestClassifier(class_weight='balanced', random_state=42)
+model.fit(X_train, y_train)  # no SMOTE needed
+```
+
+---
+
+### Cheat sheet
+
+| Situation | Do this |
+|-----------|---------|
+| Mild imbalance (70/30) | `class_weight='balanced'` |
+| Moderate (85/15) | SMOTE on training data |
+| Severe (95/5) | SMOTE + Undersample combo |
+| Categorical features mixed in | `SMOTENC` |
+
+
